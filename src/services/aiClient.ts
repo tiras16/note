@@ -1,6 +1,6 @@
 // This URL will point to your backend server (e.g., Firebase Function, Vercel, AWS Lambda)
 // Example: "https://us-central1-your-project.cloudfunctions.net/summarizeNote"
-const API_URL = "";
+const API_URL = "https://note-psi-ashen.vercel.app/api/summarize";
 
 export const aiClient = {
   summarize: async (text: string): Promise<string> => {
