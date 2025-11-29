@@ -16,17 +16,12 @@ interface NoteCardProps {
 export const NoteCard = ({ note, onPress, onToggleFlag, onDelete }: NoteCardProps) => {
   const strippedContent = note.content.replace(/<[^>]+>/g, '');
 
+  // Sadece Silme Aksiyonu (Sağa kaydırınca)
   const renderRightActions = (progress: any, dragX: any) => {
-    const trans = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100], // Basit bir geçiş
-      extrapolate: 'clamp',
-    });
-
     return (
       <TouchableOpacity
         onPress={onDelete}
-        className="bg-red-600 justify-center items-center w-24 rounded-r-3xl mb-4 ml-[-20px]" // ml negative to overlap rounded corner gap
+        className="bg-red-600 justify-center items-center w-24 rounded-r-3xl mb-4 ml-[-20px]"
         style={{ height: '100%' }}
       >
         <Icon name="trash-outline" size={30} color="white" />
@@ -34,33 +29,14 @@ export const NoteCard = ({ note, onPress, onToggleFlag, onDelete }: NoteCardProp
     );
   };
 
-  const renderLeftActions = (progress: any, dragX: any) => {
-    const trans = dragX.interpolate({
-      inputRange: [0, 100],
-      outputRange: [-100, 0],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <TouchableOpacity
-        onPress={onToggleFlag}
-        className="bg-orange-500 justify-center items-center w-24 rounded-l-3xl mb-4 mr-[-20px]"
-        style={{ height: '100%' }}
-      >
-        <Icon name="flag" size={30} color="white" />
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <Swipeable
       renderRightActions={renderRightActions}
-      renderLeftActions={renderLeftActions}
-      containerStyle={{ overflow: 'visible' }} // Gölgeler kesilmesin
+      containerStyle={{ overflow: 'visible' }}
     >
       <TouchableOpacity
         onPress={onPress}
-        activeOpacity={0.9} // Swipe ederken tıklamayı engellemek için
+        activeOpacity={0.9}
         className="bg-white p-5 rounded-3xl mb-4 shadow-sm border border-gray-50 relative"
       >
         <View className="flex-row justify-between items-start mb-2">
@@ -70,14 +46,21 @@ export const NoteCard = ({ note, onPress, onToggleFlag, onDelete }: NoteCardProp
           >
             {note.title}
           </Text>
-          {/* Flag icon still visible on card as indicator */}
-          {note.flagColor && (
+          
+          {/* Flag Icon - Always Visible & Clickable */}
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation(); // Kartın açılmasını engelle
+              onToggleFlag();
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Icon
-              name="flag"
+              name={note.flagColor ? "flag" : "flag-outline"} // Dolu veya Boş
               size={24}
-              color={note.flagColor}
+              color={note.flagColor || "#B0BEC5"} // Renkli veya Gri
             />
-          )}
+          </TouchableOpacity>
         </View>
 
         <Text className="text-gray-500 text-base leading-5" numberOfLines={4}>

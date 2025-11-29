@@ -1,21 +1,20 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import {
   View,
   FlatList,
   TouchableOpacity,
   Text,
   SafeAreaView,
-  ActionSheetIOS,
-  Platform,
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNotes, FLAG_COLORS } from "../context/NotesContext";
+import { useNotes } from "../context/NotesContext";
 import { NoteCard } from "../components/NoteCard";
 import { RootStackParamList } from "../navigation/RootNavigator";
 import { Note } from "../types/note";
+// import { FlagPicker } from "../components/FlagPicker";
 
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -24,6 +23,9 @@ const Icon = Ionicons as any;
 export const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenProp>();
   const { notes, updateFlag, deleteNote } = useNotes();
+  const [selectedNoteForFlag, setSelectedNoteForFlag] = useState<Note | null>(
+    null
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -32,53 +34,7 @@ export const HomeScreen = () => {
   }, [navigation]);
 
   const handleFlagPress = (note: Note) => {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [
-            "Cancel",
-            "Red (High)",
-            "Orange (Medium)",
-            "Blue (Low)",
-            "Green (Done)",
-            "Purple (Custom)",
-            "Remove Flag",
-          ],
-          destructiveButtonIndex: 6,
-          cancelButtonIndex: 0,
-          title: "Select Flag Priority",
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) return;
-          if (buttonIndex === 6) {
-            updateFlag(note.id, undefined);
-          } else {
-            updateFlag(note.id, FLAG_COLORS[buttonIndex - 1]);
-          }
-        }
-      );
-    } else {
-      Alert.alert("Select Flag Priority", "Choose a priority level", [
-        {
-          text: "Red (High)",
-          onPress: () => updateFlag(note.id, FLAG_COLORS[0]),
-        },
-        {
-          text: "Orange (Med)",
-          onPress: () => updateFlag(note.id, FLAG_COLORS[1]),
-        },
-        {
-          text: "Green (Done)",
-          onPress: () => updateFlag(note.id, FLAG_COLORS[3]),
-        },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => updateFlag(note.id, undefined),
-        },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
+    setSelectedNoteForFlag(note);
   };
 
   const handleDelete = (id: string) => {
@@ -90,9 +46,8 @@ export const HomeScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F0F7]">
-      {/* Custom Header */}
       <View className="flex-row justify-between items-center px-6 pt-2 pb-6">
-        <View className="w-8" /> {/* Spacer */}
+        <View className="w-8" />
         <Text className="text-3xl font-bold text-[#5E35B1]">My Notes</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
           <Icon name="settings-outline" size={28} color="#7E57C2" />
@@ -115,7 +70,7 @@ export const HomeScreen = () => {
               onPress={() =>
                 navigation.navigate("NoteDetail", { noteId: item.id })
               }
-              onToggleFlag={() => handleFlagPress(item)} // Long press or swipe triggers this logic if modified
+              onToggleFlag={() => handleFlagPress(item)}
               onDelete={() => handleDelete(item.id)}
             />
           )}
@@ -124,7 +79,6 @@ export const HomeScreen = () => {
         />
       )}
 
-      {/* FAB */}
       <View
         className="absolute bottom-10 left-0 right-0 items-center justify-center"
         pointerEvents="box-none"
@@ -143,6 +97,20 @@ export const HomeScreen = () => {
           <Icon name="add" size={36} color="white" />
         </TouchableOpacity>
       </View>
+
+      {/* 
+      <FlagPicker
+        visible={!!selectedNoteForFlag}
+        onClose={() => setSelectedNoteForFlag(null)}
+        currentColor={selectedNoteForFlag?.flagColor}
+        onSelect={(color) => {
+          if (selectedNoteForFlag) {
+            updateFlag(selectedNoteForFlag.id, color);
+          }
+          setSelectedNoteForFlag(null);
+        }}
+      />
+      */}
     </SafeAreaView>
   );
 };

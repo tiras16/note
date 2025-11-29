@@ -14,7 +14,7 @@ import { useNotes } from "../context/NotesContext";
 import { RootStackParamList } from "../navigation/RootNavigator";
 import { aiClient } from "../services/aiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import RenderHtml from "react-native-render-html";
+// import RenderHtml from "react-native-render-html"; // Temporarily commented out
 
 const Icon = Ionicons as any;
 
@@ -44,7 +44,6 @@ export const NoteDetailScreen = () => {
   const handleSummarize = async () => {
     setIsSummarizing(true);
     try {
-      // Strip HTML for AI summary to avoid confusing the "AI"
       const strippedContent = note.content.replace(/<[^>]+>/g, "");
       const summary = await aiClient.summarize(strippedContent);
       setAiSummary(summary);
@@ -58,7 +57,6 @@ export const NoteDetailScreen = () => {
   const handleSaveSummary = async (appendToCurrent: boolean) => {
     if (!aiSummary) return;
     if (appendToCurrent) {
-      // Append as simple paragraph
       const newContent = `${note.content}<br/><br/><h3>AI Summary</h3><p>${aiSummary}</p>`;
       await updateNote(note.id, note.title, newContent);
       setAiSummary(null);
@@ -71,7 +69,6 @@ export const NoteDetailScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F0F7]">
-      {/* Header */}
       <View className="flex-row justify-between items-center px-6 pt-2 pb-6">
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={28} color="#7E57C2" />
@@ -96,45 +93,44 @@ export const NoteDetailScreen = () => {
             {new Date(note.createdAt).toLocaleString()}
           </Text>
 
-          <RenderHtml
-            contentWidth={width - 48}
-            source={{ html: note.content || "<p></p>" }}
-            tagsStyles={{
-              body: { color: "#4B5563", fontSize: 18, lineHeight: 28 },
-              h1: { color: "#5E35B1", fontSize: 24, marginBottom: 10 },
-              ul: { marginBottom: 10 },
-              li: { marginBottom: 5 },
-            }}
-          />
+          {/* Debugging Text instead of RenderHtml */}
+          <Text style={{ color: "#4B5563", fontSize: 16 }}>
+            {note.content?.replace(/<[^>]+>/g, "") || "No content"}
+          </Text>
         </View>
 
-        {/* AI Section */}
         <View className="mb-8">
           <TouchableOpacity
-            className="bg-[#7E57C2] flex-row justify-center items-center p-4 rounded-2xl shadow-md mb-4"
+            className="bg-[#7E57C2] p-4 rounded-2xl shadow-md mb-4 justify-center items-center"
             onPress={handleSummarize}
             disabled={isSummarizing}
           >
             {isSummarizing ? (
               <ActivityIndicator color="white" />
             ) : (
-              <>
+              <View className="flex-row items-center justify-center">
                 <Icon name="sparkles" size={22} color="white" />
                 <Text className="text-white font-bold ml-2 text-lg">
                   Summarize with AI
                 </Text>
-              </>
+              </View>
             )}
           </TouchableOpacity>
 
-          {aiSummary && (
+          {aiSummary ? (
             <View className="bg-white p-6 rounded-3xl border-2 border-[#D1C4E9]">
               <Text className="font-bold text-[#5E35B1] mb-2 text-lg">
                 AI Response:
               </Text>
-              <Text className="text-gray-600 mb-6 leading-6">{aiSummary}</Text>
 
-              <View className="flex-row justify-end space-x-3 gap-3">
+              {/* Debugging Text instead of RenderHtml */}
+              <Text
+                style={{ color: "#4B5563", fontSize: 16, marginBottom: 10 }}
+              >
+                {aiSummary.replace(/<[^>]+>/g, "")}
+              </Text>
+
+              <View className="flex-row justify-end space-x-3 gap-3 mt-4">
                 <TouchableOpacity
                   className="bg-[#EDE7F6] px-4 py-3 rounded-xl"
                   onPress={() => handleSaveSummary(false)}
@@ -149,7 +145,7 @@ export const NoteDetailScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
