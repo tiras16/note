@@ -14,7 +14,7 @@ import { useNotes } from "../context/NotesContext";
 import { RootStackParamList } from "../navigation/RootNavigator";
 import { aiClient } from "../services/aiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
-// import RenderHtml from "react-native-render-html"; // Temporarily commented out
+import RenderHtml from "react-native-render-html";
 
 const Icon = Ionicons as any;
 
@@ -93,10 +93,16 @@ export const NoteDetailScreen = () => {
             {new Date(note.createdAt).toLocaleString()}
           </Text>
 
-          {/* Debugging Text instead of RenderHtml */}
-          <Text style={{ color: "#4B5563", fontSize: 16 }}>
-            {note.content?.replace(/<[^>]+>/g, "") || "No content"}
-          </Text>
+          <RenderHtml
+            contentWidth={width - 48}
+            source={{ html: note.content || "<p></p>" }}
+            tagsStyles={{
+              body: { color: "#4B5563", fontSize: 18, lineHeight: 28 },
+              h1: { color: "#5E35B1", fontSize: 24, marginBottom: 10 },
+              ul: { marginBottom: 10 },
+              li: { marginBottom: 5 },
+            }}
+          />
         </View>
 
         <View className="mb-8">
@@ -122,13 +128,18 @@ export const NoteDetailScreen = () => {
               <Text className="font-bold text-[#5E35B1] mb-2 text-lg">
                 AI Response:
               </Text>
-
-              {/* Debugging Text instead of RenderHtml */}
-              <Text
-                style={{ color: "#4B5563", fontSize: 16, marginBottom: 10 }}
-              >
-                {aiSummary.replace(/<[^>]+>/g, "")}
-              </Text>
+              
+              <RenderHtml
+                contentWidth={width - 96}
+                source={{ html: aiSummary }}
+                tagsStyles={{
+                  body: { color: "#4B5563", fontSize: 16, lineHeight: 24 },
+                  ul: { marginBottom: 10, paddingLeft: 20 },
+                  li: { marginBottom: 5 },
+                  p: { marginBottom: 10 },
+                  strong: { color: "#5E35B1", fontWeight: "bold" },
+                }}
+              />
 
               <View className="flex-row justify-end space-x-3 gap-3 mt-4">
                 <TouchableOpacity
