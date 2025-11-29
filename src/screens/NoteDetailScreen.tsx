@@ -128,7 +128,7 @@ export const NoteDetailScreen = () => {
               <Text className="font-bold text-[#5E35B1] mb-2 text-lg">
                 AI Response:
               </Text>
-              
+
               <RenderHtml
                 contentWidth={width - 96}
                 source={{ html: aiSummary }}

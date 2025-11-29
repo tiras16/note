@@ -14,7 +14,7 @@ import { useNotes } from "../context/NotesContext";
 import { NoteCard } from "../components/NoteCard";
 import { RootStackParamList } from "../navigation/RootNavigator";
 import { Note } from "../types/note";
-import { FlagPicker } from "../components/FlagPicker"; 
+import { FlagPicker } from "../components/FlagPicker";
 
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -23,7 +23,9 @@ const Icon = Ionicons as any;
 export const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenProp>();
   const { notes, updateFlag, deleteNote } = useNotes();
-  const [selectedNoteForFlag, setSelectedNoteForFlag] = useState<Note | null>(null);
+  const [selectedNoteForFlag, setSelectedNoteForFlag] = useState<Note | null>(
+    null
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
