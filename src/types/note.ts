@@ -4,4 +4,5 @@ export interface Note {
   content: string;
   createdAt: number;
   flagColor?: string; // Rengi tutacak, undefined ise işaretsiz
+  tags?: string[]; // AI generated tags
 }

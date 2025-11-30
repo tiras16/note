@@ -8,6 +8,7 @@ interface NotesContextType {
   updateNote: (id: string, title: string, content: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
   updateFlag: (id: string, color?: string) => Promise<void>;
+  updateTags: (id: string, tags: string[]) => Promise<void>;
   refreshNotes: () => Promise<void>;
 }
 
@@ -40,6 +41,7 @@ export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
       content,
       createdAt: Date.now(),
       flagColor: undefined,
+      tags: [],
     };
     const updated = await storage.saveNote(newNote);
     setNotes(updated);
@@ -66,13 +68,22 @@ export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
     setNotes(updated);
   };
 
+  const updateTags = async (id: string, tags: string[]) => {
+    const existing = notes.find((n) => n.id === id);
+    if (!existing) return;
+
+    const updatedNote = { ...existing, tags };
+    const updated = await storage.saveNote(updatedNote);
+    setNotes(updated);
+  };
+
   const deleteNote = async (id: string) => {
     const updated = await storage.deleteNote(id);
     setNotes(updated);
   };
 
   return (
-    <NotesContext.Provider value={{ notes, addNote, updateNote, deleteNote, updateFlag, refreshNotes }}>
+    <NotesContext.Provider value={{ notes, addNote, updateNote, deleteNote, updateFlag, updateTags, refreshNotes }}>
       {children}
     </NotesContext.Provider>
   );

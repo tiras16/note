@@ -27,9 +27,9 @@ type NoteDetailNavProp = StackNavigationProp<RootStackParamList, "NoteDetail">;
 export const NoteDetailScreen = () => {
   const navigation = useNavigation<NoteDetailNavProp>();
   const route = useRoute<NoteDetailRouteProp>();
-  const { notes, updateNote, addNote } = useNotes();
+  const { notes, updateNote, addNote, updateTags } = useNotes();
   const { width } = useWindowDimensions();
-  const { colorScheme } = useColorScheme(); // Dark mode check
+  const { colorScheme } = useColorScheme();
 
   const isDark = colorScheme === "dark";
 
@@ -37,6 +37,7 @@ export const NoteDetailScreen = () => {
   const note = notes.find((n) => n.id === noteId);
 
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isTagging, setIsTagging] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   useLayoutEffect(() => {
@@ -57,6 +58,21 @@ export const NoteDetailScreen = () => {
       console.error(error);
     } finally {
       setIsSummarizing(false);
+    }
+  };
+
+  const handleAutoTag = async () => {
+    setIsTagging(true);
+    try {
+      const strippedContent = note.content.replace(/<[^>]+>/g, "");
+      const newTags = await aiClient.generateTags(strippedContent);
+      if (newTags.length > 0) {
+        await updateTags(note.id, newTags);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsTagging(false);
     }
   };
 
@@ -132,6 +148,45 @@ export const NoteDetailScreen = () => {
             source={{ html: note.content || "<p></p>" }}
             tagsStyles={tagsStyles}
           />
+
+          {/* Tags Section */}
+          <View className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <View className="flex-row flex-wrap items-center gap-2">
+              <Icon name="pricetags-outline" size={20} color="#9FA8DA" />
+
+              {note.tags && note.tags.length > 0 ? (
+                note.tags.map((tag, index) => (
+                  <View
+                    key={index}
+                    className="bg-[#EDE7F6] dark:bg-purple-900 px-3 py-1 rounded-full mb-1"
+                  >
+                    <Text className="text-[#5E35B1] dark:text-purple-300 text-xs font-bold">
+                      {tag}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <Text className="text-gray-400 text-sm italic">
+                  No tags yet
+                </Text>
+              )}
+
+              {/* Auto Tag Button */}
+              <TouchableOpacity
+                onPress={handleAutoTag}
+                disabled={isTagging}
+                className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full ml-2 mb-1 flex-row items-center"
+              >
+                {isTagging ? (
+                  <ActivityIndicator size="small" color="#5E35B1" />
+                ) : (
+                  <Text className="text-[#5E35B1] dark:text-purple-300 text-xs font-bold">
+                    ✨ AI Tag
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         <View className="mb-8">
