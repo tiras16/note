@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   Text,
   Alert,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // Changed import
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNotes } from "../context/NotesContext";

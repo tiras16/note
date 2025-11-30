@@ -4,11 +4,11 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
-  SafeAreaView,
   Alert,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // Changed import
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Ionicons from "@expo/vector-icons/Ionicons";

@@ -5,10 +5,10 @@ import {
   Switch,
   Linking,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // Changed import
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
 import Constants from "expo-constants";
@@ -38,7 +38,9 @@ export const SettingsScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={28} color="#7E57C2" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-[#5E35B1] dark:text-purple-400">Settings</Text>
+        <Text className="text-xl font-bold text-[#5E35B1] dark:text-purple-400">
+          Settings
+        </Text>
         <View className="w-7" />
       </View>
 
@@ -49,7 +51,9 @@ export const SettingsScreen = () => {
               <View className="bg-[#EDE7F6] dark:bg-purple-900 p-2 rounded-full mr-3">
                 <Icon name="moon" size={22} color="#5E35B1" />
               </View>
-              <Text className="text-lg text-gray-800 dark:text-gray-200 font-medium">Dark Mode</Text>
+              <Text className="text-lg text-gray-800 dark:text-gray-200 font-medium">
+                Dark Mode
+              </Text>
             </View>
             <Switch
               value={isDark}
@@ -66,7 +70,9 @@ export const SettingsScreen = () => {
               <View className="bg-[#EDE7F6] dark:bg-purple-900 p-2 rounded-full mr-3">
                 <Icon name="information-circle" size={22} color="#5E35B1" />
               </View>
-              <Text className="text-gray-800 dark:text-gray-200 font-medium text-lg">App Version</Text>
+              <Text className="text-gray-800 dark:text-gray-200 font-medium text-lg">
+                App Version
+              </Text>
             </View>
             <Text className="text-[#9FA8DA] dark:text-purple-300 text-lg font-bold">
               {Constants.expoConfig?.version || "1.0.0"}
@@ -75,13 +81,17 @@ export const SettingsScreen = () => {
 
           <TouchableOpacity
             className="py-3 pt-4 flex-row items-center justify-between"
-            onPress={() => Linking.openURL("https://tiras16.github.io/note/privacy.html")}
+            onPress={() =>
+              Linking.openURL("https://tiras16.github.io/note/privacy.html")
+            }
           >
             <View className="flex-row items-center">
               <View className="bg-[#EDE7F6] dark:bg-purple-900 p-2 rounded-full mr-3">
                 <Icon name="shield-checkmark" size={22} color="#5E35B1" />
               </View>
-              <Text className="text-gray-800 dark:text-gray-200 font-medium text-lg">Privacy Policy</Text>
+              <Text className="text-gray-800 dark:text-gray-200 font-medium text-lg">
+                Privacy Policy
+              </Text>
             </View>
             <Icon name="chevron-forward" size={20} color="#B0BEC5" />
           </TouchableOpacity>

@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/summarize.js": {
+      "maxDuration": 60
+    },
+    "api/write.js": {
+      "maxDuration": 60
+    },
+    "api/tags.js": {
+      "maxDuration": 30
+    }
+  }
+}
