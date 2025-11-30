@@ -8,6 +8,9 @@
     },
     "api/tags.js": {
       "maxDuration": 30
+    },
+    "api/search.js": {
+      "maxDuration": 60
     }
   }
 }

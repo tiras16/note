@@ -1,6 +1,7 @@
 const API_URL = "https://note-psi-ashen.vercel.app/api/summarize";
 const WRITE_API_URL = "https://note-psi-ashen.vercel.app/api/write";
-const TAGS_API_URL = "https://note-psi-ashen.vercel.app/api/tags"; // New endpoint
+const TAGS_API_URL = "https://note-psi-ashen.vercel.app/api/tags";
+const SEARCH_API_URL = "https://note-psi-ashen.vercel.app/api/search"; // New endpoint
 
 export const aiClient = {
   summarize: async (text: string): Promise<string> => {
@@ -72,6 +73,29 @@ export const aiClient = {
       return data.tags || [];
     } catch (error) {
       console.error("AI Tags Error:", error);
+      return [];
+    }
+  },
+
+  searchNotes: async (query: string, notes: any[]): Promise<string[]> => {
+    try {
+      const response = await fetch(SEARCH_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, notes }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to search notes");
+      }
+
+      return data.matches || [];
+    } catch (error) {
+      console.error("AI Search Error:", error);
       return [];
     }
   },
