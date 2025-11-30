@@ -2,6 +2,7 @@ export default {
   expo: {
     name: "NoteAI",
     slug: "noteai",
+    owner: "tiras16",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -10,22 +11,30 @@ export default {
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.simgetiras.noteai"
+      bundleIdentifier: "com.simgetopcu.noteai",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
       },
-      package: "com.simgetiras.noteai",
-      edgeToEdgeEnabled: true
+      package: "com.simgetopcu.noteai",
+      edgeToEdgeEnabled: true,
     },
     web: {
-      favicon: "./assets/favicon.png"
-    }
-  }
+      favicon: "./assets/favicon.png",
+    },
+    extra: {
+      eas: {
+        projectId: "e9cbe9f9-b6ee-423a-9a21-f49211eebe43",
+      },
+    },
+  },
 };

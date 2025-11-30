@@ -5,6 +5,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { EditNoteScreen } from '../screens/EditNoteScreen';
 import { NoteDetailScreen } from '../screens/NoteDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { AiWriterScreen } from '../screens/AiWriterScreen'; // Imported
 import { Note } from '../types/note';
 
 export type RootStackParamList = {
@@ -12,6 +13,7 @@ export type RootStackParamList = {
   EditNote: { noteId?: string };
   NoteDetail: { noteId: string };
   Settings: undefined;
+  AiWriter: undefined; // Added route
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -24,6 +26,7 @@ export const RootNavigator = () => {
         <Stack.Screen name="EditNote" component={EditNoteScreen} options={{ title: 'Edit Note' }} />
         <Stack.Screen name="NoteDetail" component={NoteDetailScreen} options={{ title: 'Note Details' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+        <Stack.Screen name="AiWriter" component={AiWriterScreen} options={{ title: 'AI Writer' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

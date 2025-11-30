@@ -6,6 +6,8 @@ import {
   Text,
   SafeAreaView,
   Alert,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -45,18 +47,34 @@ export const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F3F0F7]">
+    <SafeAreaView
+      className="flex-1 bg-[#F3F0F7] dark:bg-gray-900"
+      style={{
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+      }}
+    >
       <View className="flex-row justify-between items-center px-6 pt-2 pb-6">
         <View className="w-8" />
-        <Text className="text-3xl font-bold text-[#5E35B1]">My Notes</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Icon name="settings-outline" size={28} color="#7E57C2" />
-        </TouchableOpacity>
+        <Text className="text-3xl font-bold text-[#5E35B1] dark:text-purple-400">
+          My Notes
+        </Text>
+
+        <View className="flex-row items-center gap-4">
+          <TouchableOpacity onPress={() => navigation.navigate("AiWriter")}>
+            <View className="bg-[#EDE7F6] dark:bg-purple-900 p-2 rounded-full">
+              <Icon name="sparkles" size={24} color="#7E57C2" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+            <Icon name="settings-outline" size={28} color="#7E57C2" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {notes.length === 0 ? (
         <View className="flex-1 justify-center items-center px-4">
-          <Text className="text-gray-400 text-lg text-center">
+          <Text className="text-gray-400 dark:text-gray-500 text-lg text-center">
             No notes yet. Tap + to create one!
           </Text>
         </View>
@@ -84,7 +102,7 @@ export const HomeScreen = () => {
         pointerEvents="box-none"
       >
         <TouchableOpacity
-          className="bg-[#9FA8DA] w-16 h-16 rounded-full justify-center items-center shadow-lg border-4 border-white"
+          className="bg-[#9FA8DA] w-16 h-16 rounded-full justify-center items-center shadow-lg border-4 border-white dark:border-gray-800"
           onPress={() => navigation.navigate("EditNote", {})}
           style={{
             shadowColor: "#000",

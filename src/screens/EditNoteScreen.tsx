@@ -9,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -20,6 +21,7 @@ import {
   RichToolbar,
   actions,
 } from "react-native-pell-rich-editor";
+import { useColorScheme } from "nativewind";
 
 const Icon = Ionicons as any;
 const RichEditorComponent = RichEditor as any;
@@ -36,6 +38,8 @@ export const EditNoteScreen = () => {
   const route = useRoute<EditNoteScreenRouteProp>();
   const { notes, addNote, updateNote } = useNotes();
   const richText = useRef<any>(null);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const isEditing = !!route.params?.noteId;
   const existingNote = isEditing
@@ -73,7 +77,12 @@ export const EditNoteScreen = () => {
   }, [navigation]);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F3F0F7]">
+    <SafeAreaView
+      className="flex-1 bg-[#F3F0F7] dark:bg-gray-900"
+      style={{
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+      }}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -82,7 +91,7 @@ export const EditNoteScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={28} color="#7E57C2" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-[#5E35B1]">
+          <Text className="text-xl font-bold text-[#5E35B1] dark:text-purple-400">
             {isEditing ? "Edit Note" : "New Note"}
           </Text>
           <TouchableOpacity onPress={handleSave}>
@@ -91,7 +100,7 @@ export const EditNoteScreen = () => {
         </View>
 
         <View className="flex-1 px-6 pb-4">
-          <View className="bg-white rounded-3xl shadow-sm flex-1 overflow-hidden">
+          <View className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm flex-1 overflow-hidden">
             <RichToolbarComponent
               editor={richText}
               actions={[
@@ -114,16 +123,16 @@ export const EditNoteScreen = () => {
               iconTint="#9FA8DA"
               selectedIconTint="#5E35B1"
               style={{
-                backgroundColor: "white",
+                backgroundColor: isDark ? "#1F2937" : "white", // Gray-800 : White
                 borderBottomWidth: 1,
-                borderBottomColor: "#F3F0F7",
+                borderBottomColor: isDark ? "#374151" : "#F3F0F7", // Gray-700 : Gray-50
               }}
             />
 
             <TextInput
-              className="text-2xl font-bold text-[#5E35B1] p-4 border-b border-gray-100"
+              className="text-2xl font-bold text-[#5E35B1] dark:text-purple-400 p-4 border-b border-gray-100 dark:border-gray-700"
               placeholder="Title"
-              placeholderTextColor="#9FA8DA"
+              placeholderTextColor={isDark ? "#6B7280" : "#9FA8DA"}
               value={title}
               onChangeText={setTitle}
             />
@@ -135,9 +144,9 @@ export const EditNoteScreen = () => {
                 onChange={setContent}
                 placeholder="Start typing..."
                 editorStyle={{
-                  backgroundColor: "white",
-                  color: "#4B5563",
-                  placeholderColor: "#B0BEC5",
+                  backgroundColor: isDark ? "#1F2937" : "white",
+                  color: isDark ? "#E5E7EB" : "#4B5563",
+                  placeholderColor: isDark ? "#6B7280" : "#B0BEC5",
                   contentCSSText: "font-size: 16px; line-height: 24px;",
                 }}
                 initialHeight={250}

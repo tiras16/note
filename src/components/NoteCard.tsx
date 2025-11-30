@@ -14,9 +14,14 @@ interface NoteCardProps {
 }
 
 export const NoteCard = ({ note, onPress, onToggleFlag, onDelete }: NoteCardProps) => {
-  const strippedContent = note.content.replace(/<[^>]+>/g, '');
+  // HTML'i temizlerken blok elementlerin yerine boşluk/yeni satır koyuyoruz
+  const strippedContent = note.content
+    .replace(/<br\s*\/?>/gi, '\n') // <br> -> \n
+    .replace(/<\/p>/gi, '\n\n')    // </p> -> \n\n (Paragraf sonu)
+    .replace(/<\/li>/gi, '\n')     // </li> -> \n (Liste öğesi sonu)
+    .replace(/<[^>]+>/g, '')       // Diğer tüm etiketleri sil
+    .trim();                       // Baştaki/sondaki boşlukları al
 
-  // Sadece Silme Aksiyonu (Sağa kaydırınca)
   const renderRightActions = (progress: any, dragX: any) => {
     return (
       <TouchableOpacity
@@ -37,33 +42,32 @@ export const NoteCard = ({ note, onPress, onToggleFlag, onDelete }: NoteCardProp
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.9}
-        className="bg-white p-5 rounded-3xl mb-4 shadow-sm border border-gray-50 relative"
+        className="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-4 shadow-sm border border-gray-50 dark:border-gray-700 relative"
       >
         <View className="flex-row justify-between items-start mb-2">
           <Text
-            className="text-xl font-bold text-purple-800 flex-1 mr-4"
+            className="text-xl font-bold text-purple-800 dark:text-purple-300 flex-1 mr-4"
             numberOfLines={1}
           >
             {note.title}
           </Text>
           
-          {/* Flag Icon - Always Visible & Clickable */}
           <TouchableOpacity 
             onPress={(e) => {
-              e.stopPropagation(); // Kartın açılmasını engelle
+              e.stopPropagation();
               onToggleFlag();
             }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Icon
-              name={note.flagColor ? "flag" : "flag-outline"} // Dolu veya Boş
+              name={note.flagColor ? "flag" : "flag-outline"}
               size={24}
-              color={note.flagColor || "#B0BEC5"} // Renkli veya Gri
+              color={note.flagColor || "#B0BEC5"}
             />
           </TouchableOpacity>
         </View>
 
-        <Text className="text-gray-500 text-base leading-5" numberOfLines={4}>
+        <Text className="text-gray-500 dark:text-gray-400 text-base leading-6" numberOfLines={3}>
           {strippedContent}
         </Text>
       </TouchableOpacity>
