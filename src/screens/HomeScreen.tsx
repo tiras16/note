@@ -21,14 +21,19 @@ import { RootStackParamList } from "../navigation/RootNavigator";
 import { Note } from "../types/note";
 import { FlagPicker } from "../components/FlagPicker";
 import { aiClient } from "../services/aiClient";
+import * as LocalAuthentication from "expo-local-authentication";
+import { PremiumModal } from "../components/PremiumModal"; // Added
+
+import { useTranslation } from "react-i18next";
 
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
 const Icon = Ionicons as any;
 
 export const HomeScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<HomeScreenProp>();
-  const { notes, updateFlag, deleteNote } = useNotes();
+  const { notes, updateFlag, deleteNote, isPremium } = useNotes();
   const [selectedNoteForFlag, setSelectedNoteForFlag] = useState<Note | null>(
     null
   );
@@ -40,8 +45,9 @@ export const HomeScreen = () => {
   const [aiResults, setAiResults] = useState<string[]>([]);
   const [isSearchingAi, setIsSearchingAi] = useState(false);
 
-  // Mock Premium Status
-  const isPremium = true;
+  // Premium Modal States
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumFeatureName, setPremiumFeatureName] = useState("");
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -54,10 +60,38 @@ export const HomeScreen = () => {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteNote(id) },
+    Alert.alert(t("home.deleteNoteTitle"), t("home.deleteNoteMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => deleteNote(id),
+      },
     ]);
+  };
+
+  const handleNotePress = async (note: Note) => {
+    if (note.isLocked) {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (hasHardware) {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: t("noteDetail.unlockNote"),
+          fallbackLabel: t("noteDetail.enterPassword"),
+        });
+
+        if (result.success) {
+          navigation.navigate("NoteDetail", { noteId: note.id });
+        } else {
+          // Failed or cancelled
+          return;
+        }
+      } else {
+        Alert.alert(t("common.info"), t("home.biometricsNotAvailable"));
+        navigation.navigate("NoteDetail", { noteId: note.id });
+      }
+    } else {
+      navigation.navigate("NoteDetail", { noteId: note.id });
+    }
   };
 
   // AI Search Function
@@ -69,7 +103,7 @@ export const HomeScreen = () => {
       const results = await aiClient.searchNotes(searchQuery, notes);
       setAiResults(results);
     } catch (e) {
-      Alert.alert("Search Error", "Could not perform AI search.");
+      Alert.alert(t("common.error"), t("home.searchError"));
     } finally {
       setIsSearchingAi(false);
     }
@@ -79,13 +113,8 @@ export const HomeScreen = () => {
     if (!searchQuery) return notes;
 
     if (isAiSearch) {
-      // Filter by AI results (IDs)
-      // If searching but no results yet, show nothing or all? Typically nothing until search completes.
-      // But for better UX, if query changed and we haven't searched yet, maybe empty?
-      // Let's just return matches. If empty, it shows "No matches".
       return notes.filter((n) => aiResults.includes(n.id));
     } else {
-      // Standard text filter
       const lowerQ = searchQuery.toLowerCase();
       return notes.filter(
         (n) =>
@@ -106,14 +135,16 @@ export const HomeScreen = () => {
       }}
     >
       {/* Header */}
-      <View className="flex-row justify-between items-center px-6 pt-2 pb-2">
+      <View className="flex-row justify-between items-center px-6 pt-4 pb-4 bg-transparent">
         {isSearchVisible ? (
           <View className="flex-1 flex-row items-center bg-white dark:bg-gray-800 rounded-full px-4 py-2 mr-2 shadow-sm">
             <Icon name="search" size={20} color="#9FA8DA" />
             <TextInput
               className="flex-1 ml-2 text-gray-800 dark:text-gray-200 text-base"
               placeholder={
-                isAiSearch ? "Ask AI (e.g., travel ideas)..." : "Search..."
+                isAiSearch
+                  ? t("home.aiSearchPlaceholder")
+                  : t("home.searchPlaceholder")
               }
               placeholderTextColor="#B0BEC5"
               value={searchQuery}
@@ -134,21 +165,35 @@ export const HomeScreen = () => {
             )}
           </View>
         ) : (
-          <>
-            <View className="w-8" />
-            <Text className="text-3xl font-bold text-[#5E35B1] dark:text-purple-400">
-              My Notes
-            </Text>
-          </>
+          <Text className="text-3xl font-extrabold text-[#5E35B1] dark:text-purple-400 tracking-tight">
+            {t("home.title")}
+          </Text>
         )}
 
         <View className="flex-row items-center gap-3">
           {!isSearchVisible && (
-            <TouchableOpacity onPress={() => setIsSearchVisible(true)}>
-              <View className="bg-white dark:bg-gray-800 p-2 rounded-full shadow-sm">
-                <Icon name="search" size={24} color="#7E57C2" />
-              </View>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                onPress={() => setIsSearchVisible(true)}
+                className="bg-white dark:bg-gray-800 p-2.5 rounded-full shadow-sm border border-gray-50 dark:border-gray-700"
+              >
+                <Icon name="search" size={22} color="#7E57C2" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate("AiWriter")}
+                className="bg-[#EDE7F6] dark:bg-purple-900 p-2.5 rounded-full shadow-sm"
+              >
+                <Icon name="sparkles" size={22} color="#7E57C2" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Settings")}
+                className="bg-white dark:bg-gray-800 p-2.5 rounded-full shadow-sm border border-gray-50 dark:border-gray-700"
+              >
+                <Icon name="settings-outline" size={22} color="#7E57C2" />
+              </TouchableOpacity>
+            </>
           )}
 
           {isSearchVisible && (
@@ -160,22 +205,10 @@ export const HomeScreen = () => {
                 setIsAiSearch(false);
               }}
             >
-              <Text className="text-[#7E57C2] font-bold">Cancel</Text>
+              <Text className="text-[#7E57C2] font-bold ml-2">
+                {t("common.cancel")}
+              </Text>
             </TouchableOpacity>
-          )}
-
-          {!isSearchVisible && (
-            <>
-              <TouchableOpacity onPress={() => navigation.navigate("AiWriter")}>
-                <View className="bg-[#EDE7F6] dark:bg-purple-900 p-2 rounded-full">
-                  <Icon name="sparkles" size={24} color="#7E57C2" />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-                <Icon name="settings-outline" size={28} color="#7E57C2" />
-              </TouchableOpacity>
-            </>
           )}
         </View>
       </View>
@@ -188,10 +221,8 @@ export const HomeScreen = () => {
               value={isAiSearch}
               onValueChange={(val) => {
                 if (val && !isPremium) {
-                  Alert.alert(
-                    "Premium Feature",
-                    "Upgrade to Premium to use AI Search."
-                  );
+                  setPremiumFeatureName("AI Search");
+                  setShowPremiumModal(true);
                   return;
                 }
                 setIsAiSearch(val);
@@ -200,7 +231,7 @@ export const HomeScreen = () => {
               trackColor={{ false: "#D1C4E9", true: "#7E57C2" }}
             />
             <Text className="ml-2 text-gray-600 dark:text-gray-300 font-bold">
-              {isAiSearch ? "✨ AI Search" : "Standard Search"}
+              {isAiSearch ? t("home.aiSearch") : t("home.standardSearch")}
             </Text>
           </View>
 
@@ -220,7 +251,7 @@ export const HomeScreen = () => {
         <View className="py-4">
           <ActivityIndicator color="#7E57C2" />
           <Text className="text-center text-gray-400 text-xs mt-2">
-            AI is reading your notes...
+            {t("home.aiReading")}
           </Text>
         </View>
       )}
@@ -228,7 +259,7 @@ export const HomeScreen = () => {
       {notes.length === 0 ? (
         <View className="flex-1 justify-center items-center px-4">
           <Text className="text-gray-400 dark:text-gray-500 text-lg text-center">
-            No notes yet. Tap + to create one!
+            {t("home.noNotes")}
           </Text>
         </View>
       ) : (
@@ -238,9 +269,7 @@ export const HomeScreen = () => {
           renderItem={({ item }) => (
             <NoteCard
               note={item}
-              onPress={() =>
-                navigation.navigate("NoteDetail", { noteId: item.id })
-              }
+              onPress={() => handleNotePress(item)}
               onToggleFlag={() => handleFlagPress(item)}
               onDelete={() => handleDelete(item.id)}
             />
@@ -250,7 +279,7 @@ export const HomeScreen = () => {
           ListEmptyComponent={
             searchQuery ? (
               <Text className="text-center text-gray-400 mt-10">
-                No matches found.
+                {t("home.noMatches")}
               </Text>
             ) : null
           }
@@ -286,6 +315,12 @@ export const HomeScreen = () => {
           }
           setSelectedNoteForFlag(null);
         }}
+      />
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        featureName={premiumFeatureName}
       />
     </SafeAreaView>
   );

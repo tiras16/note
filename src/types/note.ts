@@ -5,4 +5,5 @@ export interface Note {
   createdAt: number;
   flagColor?: string; // Rengi tutacak, undefined ise işaretsiz
   tags?: string[]; // AI generated tags
+  isLocked?: boolean; // Biometric lock status
 }

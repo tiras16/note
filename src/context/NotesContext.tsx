@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Note } from '../types/note';
 import { storage } from '../services/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface NotesContextType {
   notes: Note[];
@@ -9,7 +10,10 @@ interface NotesContextType {
   deleteNote: (id: string) => Promise<void>;
   updateFlag: (id: string, color?: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => Promise<void>;
+  toggleLock: (id: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
+  isPremium: boolean;
+  setIsPremium: (status: boolean) => void;
 }
 
 const NotesContext = createContext<NotesContextType | null>(null);
@@ -22,8 +26,11 @@ export const FLAG_COLORS = [
   '#7E57C2', // Mor (Özel)
 ];
 
+const PREMIUM_KEY = '@is_premium';
+
 export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [isPremium, setIsPremium] = useState(false);
 
   const refreshNotes = async () => {
     const loadedNotes = await storage.loadNotes();
@@ -31,10 +38,34 @@ export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    refreshNotes();
+    const loadData = async () => {
+      await refreshNotes();
+      try {
+        const premiumStatus = await AsyncStorage.getItem(PREMIUM_KEY);
+        if (premiumStatus === 'true') {
+          setIsPremium(true);
+        }
+      } catch (e) {
+        console.error("Error loading premium status", e);
+      }
+    };
+    loadData();
   }, []);
 
+  const setPremiumStatus = async (status: boolean) => {
+    setIsPremium(status);
+    try {
+      await AsyncStorage.setItem(PREMIUM_KEY, status ? 'true' : 'false');
+    } catch (e) {
+      console.error("Error saving premium status", e);
+    }
+  };
+
   const addNote = async (title: string, content: string) => {
+    if (!isPremium && notes.length >= 10) {
+      throw new Error("LIMIT_REACHED");
+    }
+
     const newNote: Note = {
       id: Date.now().toString(),
       title,
@@ -42,6 +73,7 @@ export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
       createdAt: Date.now(),
       flagColor: undefined,
       tags: [],
+      isLocked: false,
     };
     const updated = await storage.saveNote(newNote);
     setNotes(updated);
@@ -77,13 +109,22 @@ export const NotesProvider = ({ children }: { children: React.ReactNode }) => {
     setNotes(updated);
   };
 
+  const toggleLock = async (id: string) => {
+    const existing = notes.find((n) => n.id === id);
+    if (!existing) return;
+
+    const updatedNote = { ...existing, isLocked: !existing.isLocked };
+    const updated = await storage.saveNote(updatedNote);
+    setNotes(updated);
+  };
+
   const deleteNote = async (id: string) => {
     const updated = await storage.deleteNote(id);
     setNotes(updated);
   };
 
   return (
-    <NotesContext.Provider value={{ notes, addNote, updateNote, deleteNote, updateFlag, updateTags, refreshNotes }}>
+    <NotesContext.Provider value={{ notes, addNote, updateNote, deleteNote, updateFlag, updateTags, toggleLock, refreshNotes, isPremium, setIsPremium: setPremiumStatus }}>
       {children}
     </NotesContext.Provider>
   );

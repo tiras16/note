@@ -6,7 +6,7 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic", // Changed to automatic
     newArchEnabled: true,
     splash: {
       image: "./assets/splash.png",
@@ -18,6 +18,7 @@ export default {
       bundleIdentifier: "com.simgetopcu.noteai",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSFaceIDUsageDescription: "This app uses Face ID to secure your private notes.", // Added FaceID permission
       },
     },
     android: {

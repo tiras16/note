@@ -1,4 +1,6 @@
+import "react-native-gesture-handler"; // Must be at the top
 import "./global.css";
+import "./src/i18n"; // Initialize i18n
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";

@@ -5,7 +5,8 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { EditNoteScreen } from '../screens/EditNoteScreen';
 import { NoteDetailScreen } from '../screens/NoteDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
-import { AiWriterScreen } from '../screens/AiWriterScreen'; // Imported
+import { AiWriterScreen } from '../screens/AiWriterScreen';
+import { PremiumScreen } from '../screens/PremiumScreen'; // Added
 import { Note } from '../types/note';
 
 export type RootStackParamList = {
@@ -13,7 +14,8 @@ export type RootStackParamList = {
   EditNote: { noteId?: string };
   NoteDetail: { noteId: string };
   Settings: undefined;
-  AiWriter: undefined; // Added route
+  AiWriter: undefined;
+  Premium: undefined; // Added route
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,6 +29,7 @@ export const RootNavigator = () => {
         <Stack.Screen name="NoteDetail" component={NoteDetailScreen} options={{ title: 'Note Details' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         <Stack.Screen name="AiWriter" component={AiWriterScreen} options={{ title: 'AI Writer' }} />
+        <Stack.Screen name="Premium" component={PremiumScreen} options={{ title: 'Premium' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

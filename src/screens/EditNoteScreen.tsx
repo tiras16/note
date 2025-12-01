@@ -23,6 +23,8 @@ import {
 } from "react-native-pell-rich-editor";
 import { useColorScheme } from "nativewind";
 
+import { useTranslation } from "react-i18next";
+
 const Icon = Ionicons as any;
 const RichEditorComponent = RichEditor as any;
 const RichToolbarComponent = RichToolbar as any;
@@ -34,6 +36,7 @@ type EditNoteScreenNavProp = StackNavigationProp<
 >;
 
 export const EditNoteScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<EditNoteScreenNavProp>();
   const route = useRoute<EditNoteScreenRouteProp>();
   const { notes, addNote, updateNote } = useNotes();
@@ -58,16 +61,27 @@ export const EditNoteScreen = () => {
   const handleSave = async () => {
     const strippedContent = content.replace(/<[^>]+>/g, "").trim();
     if (!title.trim() && !strippedContent) {
-      Alert.alert("Empty Note", "Please enter a title or content.");
+      Alert.alert(t("editNote.emptyNoteTitle"), t("editNote.emptyNoteMessage"));
       return;
     }
 
-    if (isEditing && route.params.noteId) {
-      await updateNote(route.params.noteId, title, content);
-    } else {
-      await addNote(title, content);
+    try {
+      if (isEditing && route.params.noteId) {
+        await updateNote(route.params.noteId, title, content);
+      } else {
+        await addNote(title, content);
+      }
+      navigation.goBack();
+    } catch (error: any) {
+      if (error.message === "LIMIT_REACHED") {
+        Alert.alert(
+          t("common.premiumFeature"),
+          t("editNote.upgradeForUnlimited")
+        );
+      } else {
+        Alert.alert(t("common.error"), t("editNote.saveError"));
+      }
     }
-    navigation.goBack();
   };
 
   useLayoutEffect(() => {
@@ -92,7 +106,7 @@ export const EditNoteScreen = () => {
             <Icon name="arrow-back" size={28} color="#7E57C2" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-[#5E35B1] dark:text-purple-400">
-            {isEditing ? "Edit Note" : "New Note"}
+            {isEditing ? t("editNote.editTitle") : t("editNote.newTitle")}
           </Text>
           <TouchableOpacity onPress={handleSave}>
             <Icon name="checkmark" size={28} color="#7E57C2" />
@@ -131,7 +145,7 @@ export const EditNoteScreen = () => {
 
             <TextInput
               className="text-2xl font-bold text-[#5E35B1] dark:text-purple-400 p-4 border-b border-gray-100 dark:border-gray-700"
-              placeholder="Title"
+              placeholder={t("editNote.titlePlaceholder")}
               placeholderTextColor={isDark ? "#6B7280" : "#9FA8DA"}
               value={title}
               onChangeText={setTitle}
@@ -142,7 +156,7 @@ export const EditNoteScreen = () => {
                 ref={richText}
                 initialContentHTML={content}
                 onChange={setContent}
-                placeholder="Start typing..."
+                placeholder={t("editNote.contentPlaceholder")}
                 editorStyle={{
                   backgroundColor: isDark ? "#1F2937" : "white",
                   color: isDark ? "#E5E7EB" : "#4B5563",

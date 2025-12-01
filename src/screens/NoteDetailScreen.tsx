@@ -8,8 +8,9 @@ import {
   useWindowDimensions,
   Platform,
   StatusBar,
+  Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // Changed import
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNotes } from "../context/NotesContext";
@@ -18,6 +19,11 @@ import { aiClient } from "../services/aiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import RenderHtml from "react-native-render-html";
 import { useColorScheme } from "nativewind";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { PremiumModal } from "../components/PremiumModal";
+
+import { useTranslation } from "react-i18next";
 
 const Icon = Ionicons as any;
 
@@ -25,9 +31,11 @@ type NoteDetailRouteProp = RouteProp<RootStackParamList, "NoteDetail">;
 type NoteDetailNavProp = StackNavigationProp<RootStackParamList, "NoteDetail">;
 
 export const NoteDetailScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NoteDetailNavProp>();
   const route = useRoute<NoteDetailRouteProp>();
-  const { notes, updateNote, addNote, updateTags } = useNotes();
+  const { notes, updateNote, addNote, updateTags, toggleLock, isPremium } =
+    useNotes();
   const { width } = useWindowDimensions();
   const { colorScheme } = useColorScheme();
 
@@ -39,6 +47,8 @@ export const NoteDetailScreen = () => {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isTagging, setIsTagging] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumFeatureName, setPremiumFeatureName] = useState("");
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -83,14 +93,85 @@ export const NoteDetailScreen = () => {
       await updateNote(note.id, note.title, newContent);
       setAiSummary(null);
     } else {
-      await addNote(`AI Summary: ${note.title}`, `<p>${aiSummary}</p>`);
+      await addNote(
+        `${t("noteDetail.aiResponseTitle")} ${note.title}`,
+        `<p>${aiSummary}</p>`
+      );
       setAiSummary(null);
       navigation.navigate("Home");
     }
   };
 
+  const handleToggleLock = async () => {
+    if (!isPremium) {
+      setPremiumFeatureName(t("premium.features.noteLocking"));
+      setShowPremiumModal(true);
+      return;
+    }
+    await toggleLock(note.id);
+    Alert.alert(
+      note.isLocked ? t("noteDetail.unlocked") : t("noteDetail.locked"),
+      note.isLocked
+        ? t("noteDetail.visibleMessage")
+        : t("noteDetail.protectedMessage")
+    );
+  };
+
+  const handleExportPdf = async () => {
+    if (!isPremium) {
+      setPremiumFeatureName(t("premium.features.exportPdf"));
+      setShowPremiumModal(true);
+      return;
+    }
+
+    const html = `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+          <style>
+            body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
+            h1 { color: #5E35B1; font-size: 28px; margin-bottom: 10px; }
+            .meta { color: #888; font-size: 14px; margin-bottom: 30px; }
+            .content { font-size: 16px; line-height: 1.6; }
+            .tags { margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; }
+            .tag { background-color: #EDE7F6; color: #5E35B1; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; display: inline-block;}
+          </style>
+        </head>
+        <body>
+          <h1>${note.title}</h1>
+          <div class="meta">${t("noteDetail.created")}: ${new Date(
+      note.createdAt
+    ).toLocaleString()}</div>
+          <div class="content">
+            ${note.content}
+          </div>
+          ${
+            note.tags && note.tags.length > 0
+              ? `
+            <div class="tags">
+              <strong>${t("noteDetail.tags")}:</strong> 
+              ${note.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
+            </div>
+          `
+              : ""
+          }
+        </body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, {
+        UTI: ".pdf",
+        mimeType: "application/pdf",
+      });
+    } catch (error) {
+      Alert.alert(t("common.error"), t("noteDetail.pdfError"));
+    }
+  };
+
   // HTML Styles based on theme
-  const tagsStyles = {
+  const tagsStyles: any = {
     body: {
       color: isDark ? "#E5E7EB" : "#4B5563", // Gray-200 : Gray-600
       fontSize: 18,
@@ -122,13 +203,28 @@ export const NoteDetailScreen = () => {
           <Icon name="arrow-back" size={28} color="#7E57C2" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-[#5E35B1] dark:text-purple-400">
-          Details
+          {t("noteDetail.detailsTitle")}
         </Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("EditNote", { noteId: note.id })}
-        >
-          <Icon name="create-outline" size={28} color="#7E57C2" />
-        </TouchableOpacity>
+
+        <View className="flex-row gap-4">
+          <TouchableOpacity onPress={handleToggleLock}>
+            <Icon
+              name={note.isLocked ? "lock-open-outline" : "lock-closed-outline"}
+              size={28}
+              color="#7E57C2"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleExportPdf}>
+            <Icon name="share-social-outline" size={28} color="#7E57C2" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate("EditNote", { noteId: note.id })}
+          >
+            <Icon name="create-outline" size={28} color="#7E57C2" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -167,7 +263,7 @@ export const NoteDetailScreen = () => {
                 ))
               ) : (
                 <Text className="text-gray-400 text-sm italic">
-                  No tags yet
+                  {t("noteDetail.noTags")}
                 </Text>
               )}
 
@@ -181,7 +277,7 @@ export const NoteDetailScreen = () => {
                   <ActivityIndicator size="small" color="#5E35B1" />
                 ) : (
                   <Text className="text-[#5E35B1] dark:text-purple-300 text-xs font-bold">
-                    ✨ AI Tag
+                    {t("noteDetail.aiTagButton")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -201,7 +297,7 @@ export const NoteDetailScreen = () => {
               <View className="flex-row items-center justify-center">
                 <Icon name="sparkles" size={22} color="white" />
                 <Text className="text-white font-bold ml-2 text-lg">
-                  Summarize with AI
+                  {t("noteDetail.summarizeButton")}
                 </Text>
               </View>
             )}
@@ -210,7 +306,7 @@ export const NoteDetailScreen = () => {
           {aiSummary ? (
             <View className="bg-white dark:bg-gray-800 p-6 rounded-3xl border-2 border-[#D1C4E9] dark:border-purple-900">
               <Text className="font-bold text-[#5E35B1] dark:text-purple-400 mb-2 text-lg">
-                AI Response:
+                {t("noteDetail.aiResponseTitle")}
               </Text>
 
               <RenderHtml
@@ -225,20 +321,28 @@ export const NoteDetailScreen = () => {
                   onPress={() => handleSaveSummary(false)}
                 >
                   <Text className="text-[#5E35B1] dark:text-purple-300 font-bold">
-                    Save as New
+                    {t("noteDetail.saveAsNew")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="bg-[#7E57C2] dark:bg-purple-700 px-4 py-3 rounded-xl"
                   onPress={() => handleSaveSummary(true)}
                 >
-                  <Text className="text-white font-bold">Append</Text>
+                  <Text className="text-white font-bold">
+                    {t("noteDetail.append")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : null}
         </View>
       </ScrollView>
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        featureName={premiumFeatureName}
+      />
     </SafeAreaView>
   );
 };
